@@ -8,117 +8,117 @@ var FLFxChannelCount = 64;
 
 // FL Studio Events
 // BYTE EVENTS
-var FLP_Byte        = 0;
-var FLP_Enabled        = 0;
-var FLP_NoteOn        = 1;    //+pos (byte)
-var FLP_Vol            = 2;
-var FLP_Pan            = 3;
-var FLP_MIDIChan        = 4;
-var FLP_MIDINote        = 5;
-var FLP_MIDIPatch        = 6;
-var FLP_MIDIBank        = 7;
-var FLP_LoopActive        = 9;
-var FLP_ShowInfo        = 10;
-var FLP_Shuffle        = 11;
-var FLP_MainVol        = 12;
-var FLP_Stretch        = 13;    // old byte version
-var FLP_Pitchable        = 14;
-var FLP_Zipped        = 15;
-var FLP_Delay_Flags        = 16;
-var FLP_PatLength        = 17;
-var FLP_BlockLength        = 18;
-var FLP_UseLoopPoints    = 19;
-var FLP_LoopType        = 20;
-var FLP_ChanType        = 21;
-var FLP_MixSliceNum        = 22;
-var FLP_EffectChannelMuted    = 27;
+var FLP_Byte = 0;
+var FLP_Enabled = 0;
+var FLP_NoteOn = 1; //+pos (byte)
+var FLP_Vol = 2;
+var FLP_Pan = 3;
+var FLP_MIDIChan = 4;
+var FLP_MIDINote = 5;
+var FLP_MIDIPatch = 6;
+var FLP_MIDIBank = 7;
+var FLP_LoopActive = 9;
+var FLP_ShowInfo = 10;
+var FLP_Shuffle = 11;
+var FLP_MainVol = 12;
+var FLP_Stretch = 13; // old byte version
+var FLP_Pitchable = 14;
+var FLP_Zipped = 15;
+var FLP_Delay_Flags = 16;
+var FLP_PatLength = 17;
+var FLP_BlockLength = 18;
+var FLP_UseLoopPoints = 19;
+var FLP_LoopType = 20;
+var FLP_ChanType = 21;
+var FLP_MixSliceNum = 22;
+var FLP_EffectChannelMuted = 27;
 
 // WORD EVENTS
-var FLP_Word        = 64;
-var FLP_NewChan        = FLP_Word;
-var FLP_NewPat        = FLP_Word + 1;        //+PatNum (word)
-var FLP_Tempo        = FLP_Word + 2;
-var FLP_CurrentPatNum    = FLP_Word + 3;
-var FLP_PatData        = FLP_Word + 4;
-var FLP_FX            = FLP_Word + 5;
-var FLP_Fade_Stereo        = FLP_Word + 6;
-var FLP_CutOff        = FLP_Word + 7;
-var FLP_DotVol        = FLP_Word + 8;
-var FLP_DotPan        = FLP_Word + 9;
-var FLP_PreAmp        = FLP_Word + 10;
-var FLP_Decay        = FLP_Word + 11;
-var FLP_Attack        = FLP_Word + 12;
-var FLP_DotNote        = FLP_Word + 13;
-var FLP_DotPitch        = FLP_Word + 14;
-var FLP_DotMix        = FLP_Word + 15;
-var FLP_MainPitch        = FLP_Word + 16;
-var FLP_RandChan        = FLP_Word + 17;
-var FLP_MixChan        = FLP_Word + 18;
-var FLP_Resonance        = FLP_Word + 19;
-var FLP_LoopBar        = FLP_Word + 20;
-var FLP_StDel        = FLP_Word + 21;
-var FLP_FX3            = FLP_Word + 22;
-var FLP_DotReso        = FLP_Word + 23;
-var FLP_DotCutOff        = FLP_Word + 24;
-var FLP_ShiftDelay        = FLP_Word + 25;
-var FLP_LoopEndBar        = FLP_Word + 26;
-var FLP_Dot            = FLP_Word + 27;
-var FLP_DotShift        = FLP_Word + 28;
-var FLP_LayerChans        = FLP_Word + 30;
+var FLP_Word = 64;
+var FLP_NewChan = FLP_Word;
+var FLP_NewPat = FLP_Word + 1; //+PatNum (word)
+var FLP_Tempo = FLP_Word + 2;
+var FLP_CurrentPatNum = FLP_Word + 3;
+var FLP_PatData = FLP_Word + 4;
+var FLP_FX = FLP_Word + 5;
+var FLP_Fade_Stereo = FLP_Word + 6;
+var FLP_CutOff = FLP_Word + 7;
+var FLP_DotVol = FLP_Word + 8;
+var FLP_DotPan = FLP_Word + 9;
+var FLP_PreAmp = FLP_Word + 10;
+var FLP_Decay = FLP_Word + 11;
+var FLP_Attack = FLP_Word + 12;
+var FLP_DotNote = FLP_Word + 13;
+var FLP_DotPitch = FLP_Word + 14;
+var FLP_DotMix = FLP_Word + 15;
+var FLP_MainPitch = FLP_Word + 16;
+var FLP_RandChan = FLP_Word + 17;
+var FLP_MixChan = FLP_Word + 18;
+var FLP_Resonance = FLP_Word + 19;
+var FLP_LoopBar = FLP_Word + 20;
+var FLP_StDel = FLP_Word + 21;
+var FLP_FX3 = FLP_Word + 22;
+var FLP_DotReso = FLP_Word + 23;
+var FLP_DotCutOff = FLP_Word + 24;
+var FLP_ShiftDelay = FLP_Word + 25;
+var FLP_LoopEndBar = FLP_Word + 26;
+var FLP_Dot = FLP_Word + 27;
+var FLP_DotShift = FLP_Word + 28;
+var FLP_LayerChans = FLP_Word + 30;
 
 // DWORD EVENTS
-var FLP_Int            = 128;
-var FLP_Color        = FLP_Int;
-var FLP_PlayListItem    = FLP_Int + 1;    //+Pos (word) +PatNum (word)
-var FLP_Echo        = FLP_Int + 2;
-var FLP_FXSine        = FLP_Int + 3;
-var FLP_CutCutBy        = FLP_Int + 4;
-var FLP_WindowH        = FLP_Int + 5;
-var FLP_MiddleNote        = FLP_Int + 7;
-var FLP_Reserved        = FLP_Int + 8;    // may contain an invalid
-                    // version info
-var FLP_MainResoCutOff    = FLP_Int + 9;
-var FLP_DelayReso        = FLP_Int + 10;
-var FLP_Reverb        = FLP_Int + 11;
-var FLP_IntStretch        = FLP_Int + 12;
-var FLP_SSNote        = FLP_Int + 13;
-var FLP_FineTune        = FLP_Int + 14;
+var FLP_Int = 128;
+var FLP_Color = FLP_Int;
+var FLP_PlayListItem = FLP_Int + 1; //+Pos (word) +PatNum (word)
+var FLP_Echo = FLP_Int + 2;
+var FLP_FXSine = FLP_Int + 3;
+var FLP_CutCutBy = FLP_Int + 4;
+var FLP_WindowH = FLP_Int + 5;
+var FLP_MiddleNote = FLP_Int + 7;
+var FLP_Reserved = FLP_Int + 8; // may contain an invalid
+ // version info
+var FLP_MainResoCutOff = FLP_Int + 9;
+var FLP_DelayReso = FLP_Int + 10;
+var FLP_Reverb = FLP_Int + 11;
+var FLP_IntStretch = FLP_Int + 12;
+var FLP_SSNote = FLP_Int + 13;
+var FLP_FineTune = FLP_Int + 14;
 
 // TEXT EVENTS
-var FLP_Undef        = 192;        //+Size (var length)
-var FLP_Text        = FLP_Undef;    //+Size (var length)+Text
-                    //    (Null Term. String)
-var FLP_Text_ChanName    = FLP_Text;    // name for the current channel
-var FLP_Text_PatName    = FLP_Text + 1;    // name for the current pattern
-var FLP_Text_Title        = FLP_Text + 2;    // title of the loop
-var FLP_Text_Comment    = FLP_Text + 3;    // old comments in text format.
-                    // Not used anymore
-var FLP_Text_SampleFileName    = FLP_Text + 4;    // filename for the sample in
-                    // the current channel, stored
-                    // as relative path
-var FLP_Text_URL        = FLP_Text + 5;
-var FLP_Text_CommentRTF    = FLP_Text + 6;    // new comments in Rich Text
-                    // format
-var FLP_Text_Version    = FLP_Text + 7;
-var FLP_Text_PluginName    = FLP_Text + 9;    // plugin file name
-                    // (without path)
+var FLP_Undef = 192; //+Size (var length)
+var FLP_Text = FLP_Undef; //+Size (var length)+Text
+ // (Null Term. String)
+var FLP_Text_ChanName = FLP_Text; // name for the current channel
+var FLP_Text_PatName = FLP_Text + 1; // name for the current pattern
+var FLP_Text_Title = FLP_Text + 2; // title of the loop
+var FLP_Text_Comment = FLP_Text + 3; // old comments in text format.
+ // Not used anymore
+var FLP_Text_SampleFileName = FLP_Text + 4; // filename for the sample in
+ // the current channel, stored
+ // as relative path
+var FLP_Text_URL = FLP_Text + 5;
+var FLP_Text_CommentRTF = FLP_Text + 6; // new comments in Rich Text
+ // format
+var FLP_Text_Version = FLP_Text + 7;
+var FLP_Text_PluginName = FLP_Text + 9; // plugin file name
+ // (without path)
 
-var FLP_Text_EffectChanName    = FLP_Text + 12;
-var FLP_Text_MIDICtrls    = FLP_Text + 16;
-var FLP_Text_Delay        = FLP_Text + 17;
-var FLP_Text_TS404Params    = FLP_Text + 18;
-var FLP_Text_DelayLine    = FLP_Text + 19;
-var FLP_Text_NewPlugin    = FLP_Text + 20;
-var FLP_Text_PluginParams    = FLP_Text + 21;
-var FLP_Text_ChanParams    = FLP_Text + 23;// block of various channel
-                    // params (can grow)
-var FLP_Text_EnvLfoParams    = FLP_Text + 26;
+var FLP_Text_EffectChanName = FLP_Text + 12;
+var FLP_Text_MIDICtrls = FLP_Text + 16;
+var FLP_Text_Delay = FLP_Text + 17;
+var FLP_Text_TS404Params = FLP_Text + 18;
+var FLP_Text_DelayLine = FLP_Text + 19;
+var FLP_Text_NewPlugin = FLP_Text + 20;
+var FLP_Text_PluginParams = FLP_Text + 21;
+var FLP_Text_ChanParams = FLP_Text + 23;// block of various channel
+ // params (can grow)
+var FLP_Text_EnvLfoParams = FLP_Text + 26;
 var FLP_Text_BasicChanParams= FLP_Text + 27;
 var FLP_Text_OldFilterParams= FLP_Text + 28;
-var FLP_Text_AutomationData    = FLP_Text + 31;
-var FLP_Text_PatternNotes    = FLP_Text + 32;
-var FLP_Text_ChanGroupName    = FLP_Text + 39;
-var FLP_Text_PlayListItems    = FLP_Text + 41;
+var FLP_Text_AutomationData = FLP_Text + 31;
+var FLP_Text_PatternNotes = FLP_Text + 32;
+var FLP_Text_ChanGroupName = FLP_Text + 39;
+var FLP_Text_PlayListItems = FLP_Text + 41;
 
 
 
