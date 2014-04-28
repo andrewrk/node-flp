@@ -1,0 +1,19 @@
+{
+  "name": "flp",
+  "version": "0.0.0",
+  "description": "parse and read fl studio project files",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "vst",
+    "sample",
+    "plugin"
+  ],
+  "author": "Andrew Kelley <superjoe30@gmail.com>",
+  "license": "GPLv3",
+  "devDependencies": {
+    "mocha": "^1.18.2"
+  }
+}
