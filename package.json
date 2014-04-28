@@ -15,5 +15,14 @@
   "license": "GPLv3",
   "devDependencies": {
     "mocha": "^1.18.2"
-  }
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/andrewrk/node-flp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andrewrk/node-flp/issues"
+  },
+  "homepage": "https://github.com/andrewrk/node-flp"
 }
