@@ -1,0 +1,4 @@
+/node_modules
+
+# not shared with .gitignore
+/test
