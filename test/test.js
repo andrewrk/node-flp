@@ -1,5 +1,6 @@
 var path = require('path');
 var assert = require('assert');
+var fs = require('fs');
 var flp = require('../');
 
 var describe = global.describe;
@@ -60,15 +61,30 @@ var tests = [
   },
 ];
 
-describe("flp", function() {
+describe("in process", function() {
   tests.forEach(function(test) {
     it(test.filename, function(done) {
       var filePath = path.join(__dirname, 'flp', test.filename);
-      flp.parseFile(filePath, function(err, info) {
+      flp.parseFile(filePath, function(err, project) {
         if (err) return done(err);
-        assert.strictEqual(info.tempo, test.tempo);
+        assert.strictEqual(project.tempo, test.tempo);
         done();
       });
+    });
+  });
+});
+
+describe("child process", function() {
+  tests.forEach(function(test) {
+    it(test.filename, function(done) {
+      var filePath = path.join(__dirname, 'flp', test.filename);
+      var inStream = fs.createReadStream(filePath);
+      var parser = flp.createParserChild();
+      parser.on('end', function(project) {
+        assert.strictEqual(project.tempo, test.tempo);
+        done();
+      });
+      inStream.pipe(parser);
     });
   });
 });

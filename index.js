@@ -1,6 +1,9 @@
 var Writable = require('stream').Writable;
 var util = require('util');
 var fs = require('fs');
+var path = require('path');
+var spawn = require('child_process').spawn;
+var EXE_PATH = path.join(__dirname, "exe.js");
 
 // exports listed at bottom of file
 
@@ -771,6 +774,32 @@ function createParser(options) {
   return new FlpParser(options);
 }
 
+function createParserChild(options) {
+  options = options || {};
+  var child = spawn(process.execPath, [EXE_PATH], {
+    stdio: ['pipe', process.stdout, process.stderr, 'ipc'],
+  });
+
+  var parserObject = new Writable(options);
+  parserObject._write = function(chunk, encoding, callback) {
+    child.stdin.write(chunk, encoding, callback);
+  };
+  parserObject.on('finish', function() {
+    child.stdin.end();
+  });
+
+  child.on('message', function(message) {
+    if (message.type === 'error') {
+      parserObject.emit('error', new Error(message.value));
+    } else {
+      parserObject.emit(message.type, message.value);
+    }
+  });
+
+  child.send({type: 'options', value: options});
+  return parserObject;
+}
+
 util.inherits(FlpParser, Writable);
 function FlpParser(options) {
   Writable.call(this, options);
@@ -796,7 +825,7 @@ function setupListeners(parser) {
       return;
     }
     finishParsing(parser);
-    parser.emit('end');
+    parser.emit('end', parser.project);
   });
 }
 
@@ -1013,6 +1042,7 @@ function FLProject() {
 }
 
 exports.createParser = createParser;
+exports.createParserChild = createParserChild;
 exports.parseFile = parseFile;
 exports.FlpParser = FlpParser;
 
