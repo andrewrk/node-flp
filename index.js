@@ -188,13 +188,13 @@ states[STATE_HEADER] = function(parser) {
   }
 
   // number of channels
-  parser.channelCount = parser.buffer.readInt16LE(6);
-  if (parser.channelCount < 1 || parser.channelCount > 1000) {
-    parser.handleError(new Error("invalid number of channels: " + parser.channelCount));
+  parser.project.channelCount = parser.buffer.readInt16LE(6);
+  if (parser.project.channelCount < 1 || parser.project.channelCount > 1000) {
+    parser.handleError(new Error("invalid number of channels: " + parser.project.channelCount));
     return;
   }
-  for (var i = 0; i < parser.channelCount; i += 1) {
-    parser.channels.push(new FLChannel());
+  for (var i = 0; i < parser.project.channelCount; i += 1) {
+    parser.project.channels.push(new FLChannel());
   }
 
   // ppq
@@ -287,7 +287,7 @@ states[STATE_EVENT] = function(parser) {
 
   parser.sliceBufferToCursor();
 
-  var cc = parser.curChannel >= 0 ? parser.channels[parser.curChannel] : null;
+  var cc = parser.curChannel >= 0 ? parser.project.channels[parser.curChannel] : null;
   var imax;
   var ch;
   var pos, len;
@@ -330,7 +330,7 @@ states[STATE_EVENT] = function(parser) {
     }
     break;
   case FLP_MainVol:
-    parser.mainVolume = data;
+    parser.project.mainVolume = data;
     break;
   case FLP_PatLength:
     if (parser.debug) {
@@ -369,8 +369,8 @@ states[STATE_EVENT] = function(parser) {
     break;
   case FLP_EffectChannelMuted:
     var isMuted = (data & 0x08) <= 0;
-    if (parser.currentEffectChannel >= 0 && parser.currentEffectChannel <= FLFxChannelCount) {
-      parser.effectChannels[parser.currentEffectChannel].isMuted = isMuted;
+    if (parser.project.currentEffectChannel >= 0 && parser.project.currentEffectChannel <= FLFxChannelCount) {
+      parser.project.effectChannels[parser.project.currentEffectChannel].isMuted = isMuted;
     }
     break;
 
@@ -379,14 +379,14 @@ states[STATE_EVENT] = function(parser) {
     parser.curChannel = data;
     break;
   case FLP_NewPat:
-    parser.currentPattern = data - 1;
-    parser.maxPatterns = Math.max(parser.currentPattern, parser.maxPatterns);
+    parser.project.currentPattern = data - 1;
+    parser.project.maxPatterns = Math.max(parser.project.currentPattern, parser.project.maxPatterns);
     break;
   case FLP_Tempo:
-    parser.tempo = data;
+    parser.project.tempo = data;
     break;
   case FLP_CurrentPatNum:
-    parser.activeEditPattern = data;
+    parser.project.activeEditPattern = data;
     break;
   case FLP_FX:
     if (parser.debug) {
@@ -419,7 +419,7 @@ states[STATE_EVENT] = function(parser) {
     }
     break;
   case FLP_MainPitch:
-    parser.mainPitch = data;
+    parser.project.mainPitch = data;
     break;
   case FLP_Resonance:
     if (parser.debug) {
@@ -447,11 +447,11 @@ states[STATE_EVENT] = function(parser) {
     }
     break;
   case FLP_Dot:
-    var dotVal = (data & 0xff) + (parser.currentPattern << 8);
+    var dotVal = (data & 0xff) + (parser.project.currentPattern << 8);
     if (cc) cc.dots.push(dotVal);
     break;
   case FLP_LayerChans:
-    parser.channels[data].layerParent = parser.curChannel;
+    parser.project.channels[data].layerParent = parser.curChannel;
     if (cc) cc.generatorName = "Layer";
     break;
 
@@ -469,8 +469,8 @@ states[STATE_EVENT] = function(parser) {
     item.position = (data & 0xffff) * 192;
     item.length = 192;
     item.pattern = (data >> 16) - 1;
-    parser.playListItems.push(item);
-    parser.maxPatterns = Math.max(parser.maxPatterns, item.pattern);
+    parser.project.playListItems.push(item);
+    parser.project.maxPatterns = Math.max(parser.project.maxPatterns, item.pattern);
     break;
   case FLP_FXSine:
     if (parser.debug) {
@@ -507,7 +507,7 @@ states[STATE_EVENT] = function(parser) {
     if (cc) cc.name = text;
     break;
   case FLP_Text_PatName:
-    parser.patternNames[parser.currentPattern] = text;
+    parser.project.patternNames[parser.project.currentPattern] = text;
     break;
   case FLP_Text_CommentRTF:
     // TODO: support RTF comments
@@ -516,43 +516,43 @@ states[STATE_EVENT] = function(parser) {
     }
     break;
   case FLP_Text_Title:
-    parser.projectTitle = text;
+    parser.project.projectTitle = text;
     break;
   case FLP_Text_SampleFileName:
     if (cc) {
       cc.sampleFileName = text;
       cc.generatorName = "Sampler";
-      parser.sampleList.push(cc.sampleFileName);
+      parser.project.sampleList.push(cc.sampleFileName);
     }
     break;
   case FLP_Text_Version:
     if (parser.debug) {
       console.log("FLP version: ", text );
     }
-    parser.versionString = text;
+    parser.project.versionString = text;
     // divide the version string into numbers
-    var numbers = parser.versionString.split('.');
-    parser.version = (parseInt(numbers[0], 10) << 8) +
-                     (parseInt(numbers[1], 10) << 4) +
-                     (parseInt(numbers[2], 10) << 0);
-    if (parser.version >= 0x600) {
-      parser.versionSpecificFactor = 100;
+    var numbers = parser.project.versionString.split('.');
+    parser.project.version = (parseInt(numbers[0], 10) << 8) +
+                             (parseInt(numbers[1], 10) << 4) +
+                             (parseInt(numbers[2], 10) << 0);
+    if (parser.project.version >= 0x600) {
+      parser.project.versionSpecificFactor = 100;
     }
     break;
   case FLP_Text_PluginName:
     var pluginName = text;
     // we add all plugins to effects list and then
     // remove the ones that aren't effects later.
-    parser.effectPlugins.push(pluginName);
+    parser.project.effectPlugins.push(pluginName);
     if (cc) cc.generatorName = pluginName;
     if (parser.debug) {
       console.log("plugin: ", pluginName);
     }
     break;
   case FLP_Text_EffectChanName:
-    parser.currentEffectChannel += 1;
-    if (parser.currentEffectChannel <= FLFxChannelCount) {
-      parser.effectChannels[parser.currentEffectChannel].name = text;
+    parser.project.currentEffectChannel += 1;
+    if (parser.project.currentEffectChannel <= FLFxChannelCount) {
+      parser.project.effectChannels[parser.project.currentEffectChannel].name = text;
     }
     break;
   case FLP_Text_Delay:
@@ -561,7 +561,7 @@ states[STATE_EVENT] = function(parser) {
     }
     // intList[1] seems to be volume or similiar and
     // needs to be divided
-    // by parser.versionSpecificFactor
+    // by parser.project.versionSpecificFactor
     break;
   case FLP_Text_TS404Params:
     if (cc && cc.pluginSettings == null) {
@@ -589,7 +589,7 @@ states[STATE_EVENT] = function(parser) {
           var mappedArps = [0, 1, 5, 6, 2, 3, 4];
           cc.selectedArp = mappedArps[cc.selectedArp];
       }
-      cc.arpTime = ((intList[13]+1 ) * parser.tempo) / (4 * 16) + 1;
+      cc.arpTime = ((intList[13]+1 ) * parser.project.tempo) / (4 * 16) + 1;
       cc.arpGate = (intList[14] * 100.0) / 48.0;
       cc.arpEnabled = intList[10] > 0;
     }
@@ -627,8 +627,8 @@ states[STATE_EVENT] = function(parser) {
     }
     break;
   case FLP_Text_BasicChanParams:
-    cc.volume = Math.floor(intList[1] / parser.versionSpecificFactor);
-    cc.panning = Math.floor(intList[0] / parser.versionSpecificFactor);
+    cc.volume = Math.floor(intList[1] / parser.project.versionSpecificFactor);
+    cc.panning = Math.floor(intList[0] / parser.project.versionSpecificFactor);
     if (strbuf.length > 12) {
       cc.filterType = strbuf.readUInt8(20);
       cc.filterCut = strbuf.readUInt8(12);
@@ -657,8 +657,8 @@ states[STATE_EVENT] = function(parser) {
       a.value = intList[3*i+2];
       a.channel = intList[3*i+1] >> 16;
       a.control = intList[3*i+1] & 0xffff;
-      if (a.channel >= 0 && a.channel < parser.channelCount) {
-        parser.channels[a.channel].automationData.push(a);
+      if (a.channel >= 0 && a.channel < parser.project.channelCount) {
+        parser.project.channels[a.channel].automationData.push(a);
       }
     }
     break;
@@ -682,8 +682,8 @@ states[STATE_EVENT] = function(parser) {
       pos = Math.floor(pos / ((4*parser.ppq) / 192));
       len = Math.floor(len / ((4*parser.ppq) / 192));
       var n = new FLNote(len, pos, key, vol, pan);
-      if (ch < parser.channelCount) {
-        parser.channels[ch].notes.push([parser.currentPattern, n]);
+      if (ch < parser.project.channelCount) {
+        parser.project.channels[ch].notes.push([parser.project.currentPattern, n]);
       } else if (parser.debug) {
         console.log("Invalid ch: ", ch );
       }
@@ -707,7 +707,7 @@ states[STATE_EVENT] = function(parser) {
       }
       var val = intList[i*3+2];
       if (param === FLP_EffectParamVolume) {
-        parser.effectChannels[ch].volume = Math.floor(val / parser.versionSpecificFactor);
+        parser.project.effectChannels[ch].volume = Math.floor(val / parser.project.versionSpecificFactor);
       } else if (parser.debug) {
         console.log("FX-ch: ", ch, "  param: " , param, "  value: ", val );
       }
@@ -726,7 +726,7 @@ states[STATE_EVENT] = function(parser) {
         item.position = pos;
         item.length = len;
         item.pattern = 2278 - pat;
-        parser.playListItems.push(i);
+        parser.project.playListItems.push(i);
       } else if (parser.debug) {
         console.log("unknown playlist item: ", text);
       }
@@ -757,7 +757,7 @@ function parseFile(file, options, callback) {
   parser.on('end', function() {
     if (alreadyError) return;
     alreadyError = true;
-    callback(null, parser);
+    callback(null, parser.project);
   });
 
   function handleError(err) {
@@ -781,33 +781,9 @@ function FlpParser(options) {
   this.debug = !!options.debug;
   this.curChannel = -1;
 
-  this.mainVolume = 300;
-  this.mainPitch = 0;
-  this.tempo = 140;
-  this.channelCount = 0;
-  this.channels = [];
-  this.effects = [];
-  this.playlistItems = [];
-  this.patternNames = [];
-  this.maxPatterns = 0;
-  this.currentPattern = 0;
-  this.activeEditPattern = 0;
-  this.effectChannels = new Array(FLFxChannelCount + 1);
-  for (var i = 0; i <= FLFxChannelCount; i += 1) {
-    this.effectChannels[i] = new FLEffectChannel();
-  }
-  this.currentEffectChannel = -1;
-  this.projectNotes = null;
-  this.projectTitle = null;
-  this.versionString = null;
-  this.version = 0x100;
-  this.versionSpecificFactor = 1;
+  this.project = new FLProject();
 
-  this.sampleList = [];
-  this.effectPlugins = [];
   this.ppq = null;
-  this.effectStrings = [];
-
   this.error = null;
 
   setupListeners(this);
@@ -827,21 +803,21 @@ function setupListeners(parser) {
 function finishParsing(parser) {
   var i;
   // for each fruity wrapper, extract the plugin name
-  for (i = 0; i < parser.channels.length; i += 1) {
-    tryFruityWrapper(parser.channels[i]);
+  for (i = 0; i < parser.project.channels.length; i += 1) {
+    tryFruityWrapper(parser.project.channels[i]);
   }
-  for (i = 0; i < parser.effects.length; i += 1) {
-    tryFruityWrapper(parser.effects[i]);
+  for (i = 0; i < parser.project.effects.length; i += 1) {
+    tryFruityWrapper(parser.project.effects[i]);
   }
   // effects are the ones that aren't channels.
   var channelPlugins = {};
-  for (i = 0; i < parser.channels.length; i += 1) {
-    channelPlugins[parser.channels[i].generatorName] = true;
+  for (i = 0; i < parser.project.channels.length; i += 1) {
+    channelPlugins[parser.project.channels[i].generatorName] = true;
   }
-  for (i = 0; i < parser.effectPlugins.length; i += 1) {
-    var effectPluginName = parser.effectPlugins[i];
+  for (i = 0; i < parser.project.effectPlugins.length; i += 1) {
+    var effectPluginName = parser.project.effectPlugins[i];
     if (!channelPlugins[effectPluginName]) {
-      parser.effectStrings.push(effectPluginName);
+      parser.project.effectStrings.push(effectPluginName);
     }
   }
 }
@@ -1009,6 +985,33 @@ function FLNote(len, pos, key, vol, pan) {
   this.detuning = null;
 }
 
+function FLProject() {
+  this.mainVolume = 300;
+  this.mainPitch = 0;
+  this.tempo = 140;
+  this.channelCount = 0;
+  this.channels = [];
+  this.effects = [];
+  this.playlistItems = [];
+  this.patternNames = [];
+  this.maxPatterns = 0;
+  this.currentPattern = 0;
+  this.activeEditPattern = 0;
+  this.currentEffectChannel = -1;
+  this.projectTitle = null;
+  this.versionString = null;
+  this.version = 0x100;
+  this.versionSpecificFactor = 1;
+  this.sampleList = [];
+  this.effectPlugins = [];
+  this.effectStrings = [];
+
+  this.effectChannels = new Array(FLFxChannelCount + 1);
+  for (var i = 0; i <= FLFxChannelCount; i += 1) {
+    this.effectChannels[i] = new FLEffectChannel();
+  }
+}
+
 exports.createParser = createParser;
 exports.parseFile = parseFile;
 exports.FlpParser = FlpParser;
@@ -1019,6 +1022,7 @@ exports.FLPlaylistItem = FLPlaylistItem;
 exports.FLChannelEnvelope = FLChannelEnvelope;
 exports.FLAutomation = FLAutomation;
 exports.FLNote = FLNote;
+exports.FLProject = FLProject;
 
 exports.FilterTypes = FilterTypes;
 exports.ArpDirections = ArpDirections;
