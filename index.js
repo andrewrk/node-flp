@@ -273,6 +273,9 @@ states[STATE_EVENT] = function(parser) {
     }
     text = parser.readString(textLen);
     if (text == null) return true;
+    if (text[text.length - 1] === '\x00') {
+      text = text.substring(0, text.length - 1);
+    }
     // also interpret same data as intList
     strbuf = parser.strbuf;
     var intCount = Math.floor(parser.strbuf.length / 4);
@@ -366,7 +369,7 @@ states[STATE_EVENT] = function(parser) {
     break;
   case FLP_EffectChannelMuted:
     var isMuted = (data & 0x08) <= 0;
-    if (parser.currentEffectChannel >= 0 && parser.currentEffectChannel < FLFxChannelCount) {
+    if (parser.currentEffectChannel >= 0 && parser.currentEffectChannel <= FLFxChannelCount) {
       parser.effectChannels[parser.currentEffectChannel].isMuted = isMuted;
     }
     break;
@@ -626,7 +629,7 @@ states[STATE_EVENT] = function(parser) {
   case FLP_Text_BasicChanParams:
     cc.volume = intList[1] / parser.versionSpecificFactor;
     cc.panning = intList[0] / parser.versionSpecificFactor;
-    if (text.length > 12) {
+    if (strbuf.length > 12) {
       cc.filterType = strbuf.readUInt8(20);
       cc.filterCut = strbuf.readUInt8(12);
       cc.filterRes = strbuf.readUInt8(16);
@@ -782,8 +785,8 @@ function FlpParser(options) {
   this.maxPatterns = 0;
   this.currentPattern = 0;
   this.activeEditPattern = 0;
-  this.effectChannels = new Array(FLFxChannelCount);
-  for (var i = 0; i < FLFxChannelCount; i += 1) {
+  this.effectChannels = new Array(FLFxChannelCount + 1);
+  for (var i = 0; i <= FLFxChannelCount; i += 1) {
     this.effectChannels[i] = new FLEffectChannel();
   }
   this.currentEffectChannel = -1;
@@ -894,9 +897,9 @@ function fruityWrapper(buf) {
 
 FlpParser.prototype._write = function(chunk, encoding, callback) {
   this.buffer = Buffer.concat([this.buffer, chunk]);
-  this.cursor = 0;
   for (;;) {
     var fn = states[this.state];
+    this.cursor = 0;
     var waitForWrite = fn(this);
     if (this.error || waitForWrite) break;
   }
