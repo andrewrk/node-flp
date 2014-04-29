@@ -163,7 +163,7 @@ var STATE_SKIP    = STATE_COUNT++;
 
 var states = new Array(STATE_COUNT);
 states[STATE_START] = function(parser) {
-  if (parser.buffer.length < 4) return;
+  if (parser.buffer.length < 4) return true;
   if (parser.buffer.slice(0, 4).toString('ascii') !== 'FLhd') {
     parser.handleError(new Error("Expected magic number"));
     return;
@@ -173,7 +173,7 @@ states[STATE_START] = function(parser) {
   parser.buffer = parser.buffer.slice(4);
 };
 states[STATE_HEADER] = function(parser) {
-  if (parser.buffer.length < 10) return;
+  if (parser.buffer.length < 10) return true;
   var headerLen = parser.buffer.readInt32LE(0);
   if (headerLen !== 6) {
     parser.handleError(new Error("Expected header length 6, not " + headerLen));
@@ -208,7 +208,7 @@ states[STATE_HEADER] = function(parser) {
   parser.buffer = parser.buffer.slice(10);
 };
 states[STATE_FLDT] = function(parser) {
-  if (parser.buffer.length < 8) return;
+  if (parser.buffer.length < 8) return true;
   var id = parser.buffer.slice(0, 4).toString('ascii');
   var len = parser.buffer.readInt32LE(4);
 
@@ -233,27 +233,29 @@ states[STATE_SKIP] = function(parser) {
   parser.skipBytesLeft -= skipBytes;
   if (parser.skipBytesLeft === 0) {
     parser.state = parser.nextState;
+  } else {
+    return true;
   }
 };
 states[STATE_EVENT] = function(parser) {
   var eventId = parser.readUInt8();
   var data = parser.readUInt8();
 
-  if (eventId == null || data == null) return;
+  if (eventId == null || data == null) return true;
 
   var b;
   if (eventId >= FLP_Word && eventId < FLP_Text) {
     b = parser.readUInt8();
-    if (b == null) return;
+    if (b == null) return true;
     data = data | (b << 8);
   }
   if (eventId >= FLP_Int && eventId < FLP_Text) {
     b = parser.readUInt8();
-    if (b == null) return;
+    if (b == null) return true;
     data = data | (b << 16);
 
     b = parser.readUInt8();
-    if (b == null) return;
+    if (b == null) return true;
     data = data | (b << 24);
   }
   var text;
@@ -266,14 +268,14 @@ states[STATE_EVENT] = function(parser) {
     var shift = 0;
     while (data & 0x80) {
       data = parser.readUInt8();
-      if (data == null) return;
+      if (data == null) return true;
       textLen = textLen | ((data & 0x7F) << (shift += 7));
     }
     text = parser.readString(textLen);
-    if (text == null) return;
+    if (text == null) return true;
     // also interpret same data as intList
-    strbuf = this.strbuf;
-    var intCount = Math.floor(this.strbuf.length / 4);
+    strbuf = parser.strbuf;
+    var intCount = Math.floor(parser.strbuf.length / 4);
     intList = [];
     for (i = 0; i < intCount; i += 1) {
       intList.push(strbuf.readInt32LE(i * 4));
@@ -364,7 +366,7 @@ states[STATE_EVENT] = function(parser) {
     break;
   case FLP_EffectChannelMuted:
     var isMuted = (data & 0x08) <= 0;
-    if (parser.currentEffectChannel <= FLFxChannelCount) {
+    if (parser.currentEffectChannel >= 0 && parser.currentEffectChannel < FLFxChannelCount) {
       parser.effectChannels[parser.currentEffectChannel].isMuted = isMuted;
     }
     break;
@@ -731,12 +733,22 @@ states[STATE_EVENT] = function(parser) {
 };
 
 function parseFile(file, options, callback) {
+  if (typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+
   var inStream = fs.createReadStream(file, options);
   var parser = createParser(options);
   var alreadyError = false;
   inStream.on('error', handleError);
   parser.on('error', handleError);
   inStream.pipe(parser);
+  parser.on('end', function() {
+    if (alreadyError) return;
+    alreadyError = true;
+    callback(null, parser);
+  });
 
   function handleError(err) {
     if (alreadyError) return;
@@ -785,6 +797,8 @@ function FlpParser(options) {
   this.effectPlugins = [];
   this.ppq = null;
   this.effectStrings = [];
+
+  this.error = null;
 
   setupListeners(this);
 }
@@ -881,13 +895,12 @@ function fruityWrapper(buf) {
 FlpParser.prototype._write = function(chunk, encoding, callback) {
   this.buffer = Buffer.concat([this.buffer, chunk]);
   this.cursor = 0;
-  var fn = states[this.state];
-  fn();
+  for (;;) {
+    var fn = states[this.state];
+    var waitForWrite = fn(this);
+    if (this.error || waitForWrite) break;
+  }
   callback();
-};
-
-FlpParser.prototype.setCursor = function(pos) {
-  this.cursor = pos;
 };
 
 FlpParser.prototype.readUInt8 = function() {
@@ -910,6 +923,7 @@ FlpParser.prototype.sliceBufferToCursor = function() {
 };
 
 FlpParser.prototype.handleError = function(err) {
+  this.error = err;
   this.emit('error', err);
 };
 

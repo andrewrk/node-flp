@@ -8,7 +8,7 @@ if (!inputFile) {
   process.exit(1);
 }
 
-flp.parseFile(inputFile, function(err, projectInfo) {
+flp.parseFile(inputFile, {debug: true}, function(err, projectInfo) {
   if (err) throw err;
   console.log(projectInfo);
 });
