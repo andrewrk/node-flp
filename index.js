@@ -627,8 +627,8 @@ states[STATE_EVENT] = function(parser) {
     }
     break;
   case FLP_Text_BasicChanParams:
-    cc.volume = intList[1] / parser.versionSpecificFactor;
-    cc.panning = intList[0] / parser.versionSpecificFactor;
+    cc.volume = Math.floor(intList[1] / parser.versionSpecificFactor);
+    cc.panning = Math.floor(intList[0] / parser.versionSpecificFactor);
     if (strbuf.length > 12) {
       cc.filterType = strbuf.readUInt8(20);
       cc.filterCut = strbuf.readUInt8(12);
@@ -650,10 +650,10 @@ states[STATE_EVENT] = function(parser) {
     break;
   case FLP_Text_AutomationData:
     var bpae = 12;
-    imax = strbuf.length / bpae;
+    imax = Math.floor(strbuf.length / bpae);
     for (i = 0; i < imax; ++i) {
       var a = new FLAutomation();
-      a.pos = intList[3*i+0] / (4*parser.ppq / 192);
+      a.pos = Math.floor(intList[3*i+0] / (4*parser.ppq / 192));
       a.value = intList[3*i+2];
       a.channel = intList[3*i+1] >> 16;
       a.control = intList[3*i+1] & 0xffff;
@@ -664,16 +664,23 @@ states[STATE_EVENT] = function(parser) {
     break;
   case FLP_Text_PatternNotes:
     var bpn = 20;
-    imax = (strbuf.length + bpn - 1) / bpn;
-    for (i = 0; i < imax; ++i) {
-      ch = strbuf.readInt32LE(i * bpn + 6);
-      var pan = strbuf.readInt32LE(i * bpn + 16);
-      var vol = strbuf.readInt32LE(i * bpn + 17);
+    imax = Math.floor((strbuf.length + bpn - 1) / bpn);
+    if ((imax-1) * bpn + 18 >= strbuf.length) {
+      if (parser.debug) {
+        console.log("invalid pattern notes length");
+      }
+      break;
+    }
+    for (i = 0; i < imax; i += 1) {
+      ch = strbuf.readUInt8(i * bpn + 6);
+      var pan = strbuf.readUInt8(i * bpn + 16);
+      var vol = strbuf.readUInt8(i * bpn + 17);
       pos = strbuf.readInt32LE(i * bpn);
-      var key = strbuf.readInt32LE(i * bpn + 12);
+      var key = strbuf.readUInt8(i * bpn + 12);
       len = strbuf.readInt32LE(i * bpn + 8);
-      pos /= (4*parser.ppq) / 192;
-      len /= (4*parser.ppq) / 192;
+
+      pos = Math.floor(pos / ((4*parser.ppq) / 192));
+      len = Math.floor(len / ((4*parser.ppq) / 192));
       var n = new FLNote(len, pos, key, vol, pan);
       if (ch < parser.channelCount) {
         parser.channels[ch].notes.push([parser.currentPattern, n]);
@@ -691,7 +698,7 @@ states[STATE_EVENT] = function(parser) {
     var FLP_EffectParamVolume = 0x1fc0;
 
     var bpi = 12;
-    imax = strbuf.length / bpi;
+    imax = Math.floor(strbuf.length / bpi);
     for (i = 0; i < imax; ++i) {
       var param = intList[i*3+1] & 0xffff;
       ch = ( intList[i*3+1] >> 22 ) & 0x7f;
@@ -700,7 +707,7 @@ states[STATE_EVENT] = function(parser) {
       }
       var val = intList[i*3+2];
       if (param === FLP_EffectParamVolume) {
-        parser.effectChannels[ch].volume = (val / parser.versionSpecificFactor);
+        parser.effectChannels[ch].volume = Math.floor(val / parser.versionSpecificFactor);
       } else if (parser.debug) {
         console.log("FX-ch: ", ch, "  param: " , param, "  value: ", val );
       }
@@ -708,10 +715,10 @@ states[STATE_EVENT] = function(parser) {
     break;
   case 233:    // playlist items
     bpi = 28;
-    imax = strbuf.length / bpi;
+    imax = Math.floor(strbuf.length / bpi);
     for (i = 0; i < imax; ++i) {
-      pos = intList[i*bpi/4+0] / ((4*parser.ppq) / 192);
-      len = intList[i*bpi/4+2] / ((4*parser.ppq) / 192);
+      pos = Math.floor(intList[i*bpi/4+0] / ((4*parser.ppq) / 192));
+      len = Math.floor(intList[i*bpi/4+2] / ((4*parser.ppq) / 192));
       var pat = intList[i*bpi/4+3] & 0xfff;
       // whatever these magic numbers are for...
       if( pat > 2146 && pat <= 2278 ) {
