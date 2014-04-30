@@ -863,6 +863,7 @@ function fruityWrapper(buf) {
   var cursor = 0;
   var cursorEnd = cursor + buf.length;
   var version = readInt32LE();
+  if (version == null) return "";
   if (version <= 4) {
     // "old format"
     var extraBlockSize = readInt32LE();
@@ -871,12 +872,15 @@ function fruityWrapper(buf) {
     var pluginType = readInt32LE();
     var pluginSpecificBlockSize = readInt32LE();
     var pluginNameLen = readUInt8();
+    if (pluginNameLen == null) return "";
     return buf.slice(cursor, cursor + pluginNameLen).toString('utf8');
   } else {
     // "new format"
     while (cursor < cursorEnd) {
       var chunkId = readInt32LE();
+      if (chunkSize == null) return "";
       var chunkSize = readUInt64LE();
+      if (chunkSize == null) return "";
       if (chunkId === cidPluginName) {
         return buf.slice(cursor, cursor + chunkSize).toString('utf8');
       }
@@ -886,18 +890,24 @@ function fruityWrapper(buf) {
   return "";
 
   function readInt32LE() {
+    if (cursor + 4 > buf.length) return null;
+
     var val = buf.readInt32LE(cursor);
     cursor += 4;
     return val;
   }
 
   function readUInt8() {
+    if (cursor + 1 > buf.length) return null;
+
     var val = buf.readUInt8(cursor);
     cursor += 1;
     return val;
   }
 
   function readUInt64LE() {
+    if (cursor + 8 > buf.length) return null;
+
     var val = 0;
     for (var i = 0; i < 8; i += 1) {
       val += buf.readUInt8(cursor + i) * Math.pow(2, 8 * i);
@@ -919,14 +929,14 @@ FlpParser.prototype._write = function(chunk, encoding, callback) {
 };
 
 FlpParser.prototype.readUInt8 = function() {
-  if (this.cursor + 1 >= this.buffer.length) return null;
+  if (this.cursor >= this.buffer.length) return null;
   var val = this.buffer.readUInt8(this.cursor);
   this.cursor += 1;
   return val;
 };
 
 FlpParser.prototype.readString = function(len) {
-  if (this.cursor + len >= this.buffer.length) return null;
+  if (this.cursor + len > this.buffer.length) return null;
   this.strbuf = this.buffer.slice(this.cursor, this.cursor + len);
   var val = this.strbuf.toString('utf8');
   this.cursor += len;
