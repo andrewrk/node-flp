@@ -472,7 +472,7 @@ states[STATE_EVENT] = function(parser) {
     item.position = (data & 0xffff) * 192;
     item.length = 192;
     item.pattern = (data >> 16) - 1;
-    parser.project.playListItems.push(item);
+    parser.project.playlistItems.push(item);
     parser.project.maxPatterns = Math.max(parser.project.maxPatterns, item.pattern);
     break;
   case FLP_FXSine:
@@ -729,7 +729,7 @@ states[STATE_EVENT] = function(parser) {
         item.position = pos;
         item.length = len;
         item.pattern = 2278 - pat;
-        parser.project.playListItems.push(i);
+        parser.project.playlistItems.push(i);
       } else if (parser.debug) {
         console.log("unknown playlist item: ", text);
       }
