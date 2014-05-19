@@ -59,6 +59,11 @@ var tests = [
     filename: 'TheCastle_19.flp',
     tempo: 135,
   },
+  {
+    filename: 'listen-to-my-synthesizer.flp',
+    tempo: 140,
+    plugins: ['Nexus', 'Synth1 VST'],
+  },
 ];
 
 describe("in process", function() {
@@ -68,7 +73,19 @@ describe("in process", function() {
       flp.parseFile(filePath, function(err, project) {
         if (err) return done(err);
         assert.strictEqual(project.tempo, test.tempo);
+        if (test.plugins) {
+          test.plugins.forEach(projectMustHavePlugin);
+        }
         done();
+
+        function projectMustHavePlugin(pluginName) {
+          var ok = false;
+          for (var i = 0; i < project.channels.length; i += 1) {
+            var generatorName = project.channels[i].generatorName;
+            if (generatorName === pluginName) ok = true;
+          }
+          assert.ok(ok, "project is missing plugin: " + pluginName);
+        }
       });
     });
   });

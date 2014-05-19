@@ -878,7 +878,6 @@ function fruityWrapper(buf) {
     // "new format"
     while (cursor < cursorEnd) {
       var chunkId = readInt32LE();
-      if (chunkSize == null) return "";
       var chunkSize = readUInt64LE();
       if (chunkSize == null) return "";
       if (chunkId === cidPluginName) {
