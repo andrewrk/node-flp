@@ -4,7 +4,7 @@ var flp = require('./');
 var inputFile = process.argv[2];
 
 if (!inputFile) {
-  console.log("Usage: flp-parse filee.flp");
+  console.log("Usage: flp-parse file.flp");
   process.exit(1);
 }
 
