@@ -26,10 +26,12 @@ var tests = [
   {
     filename: '4front+mjcompressor.flp',
     tempo: 140,
+    plugins: ['4Front Piano', 'MjMultibandCompressor'],
   },
   {
     filename: '4frontpiano.flp',
     tempo: 140,
+    plugins: ['4Front Piano'],
   },
   {
     filename: '5-replace-sampler-with-3xosc.flp',
@@ -42,6 +44,7 @@ var tests = [
   {
     filename: 'ambience.flp',
     tempo: 140,
+    plugins: ['Ambience'],
   },
   {
     filename: 'audio-clip.flp',
@@ -50,6 +53,8 @@ var tests = [
   {
     filename: 'effects.flp',
     tempo: 140,
+    plugins: ['Ambience', 'Edison', 'Gross Beat', 'Hardcore',
+    'Maximus', 'MjMultibandCompressor', 'Soundgoodizer', 'Vocodex'],
   },
   {
     filename: 'native-plugins.flp',
@@ -58,11 +63,17 @@ var tests = [
   {
     filename: 'TheCastle_19.flp',
     tempo: 135,
+    plugins: ['Synth1 VST', 'DirectWave', 'Sytrus'],
   },
   {
     filename: 'listen-to-my-synthesizer.flp',
     tempo: 140,
     plugins: ['Nexus', 'Synth1 VST'],
+  },
+  {
+    filename: 'mdl.flp',
+    tempo: 140,
+    plugins: ['Decimort', 'Altiverb 6', 'FabFilter Timeless 2', 'FabFilter Pro-L'],
   },
 ];
 
@@ -99,7 +110,19 @@ describe("child process", function() {
       var parser = flp.createParserChild();
       parser.on('end', function(project) {
         assert.strictEqual(project.tempo, test.tempo);
+        if (test.plugins) {
+          test.plugins.forEach(projectMustHavePlugin);
+        }
         done();
+
+        function projectMustHavePlugin(pluginName) {
+          var ok = false;
+          for (var i = 0; i < project.channels.length; i += 1) {
+            var generatorName = project.channels[i].generatorName;
+            if (generatorName === pluginName) ok = true;
+          }
+          assert.ok(ok, "project is missing plugin: " + pluginName);
+        }
       });
       inStream.pipe(parser);
     });

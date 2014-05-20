@@ -379,7 +379,11 @@ states[STATE_EVENT] = function(parser) {
 
   // WORD EVENTS
   case FLP_NewChan:
+    if (parser.debug) {
+      console.log("cur channel:", data);
+    }
     parser.curChannel = data;
+    parser.gotCurChannel = true;
     break;
   case FLP_NewPat:
     parser.project.currentPattern = data - 1;
@@ -544,12 +548,21 @@ states[STATE_EVENT] = function(parser) {
     break;
   case FLP_Text_PluginName:
     var pluginName = text;
+
+    if (!parser.gotCurChannel) {
+      // I guess if we don't get the cur channel we should add a new one...
+      parser.curChannel = parser.project.channelCount;
+      parser.project.channelCount += 1;
+      cc = parser.project.channels[parser.curChannel] = new FLChannel();
+    }
+    parser.gotCurChannel = false;
+
     // we add all plugins to effects list and then
     // remove the ones that aren't effects later.
     parser.project.effectPlugins.push(pluginName);
     if (cc) cc.generatorName = pluginName;
     if (parser.debug) {
-      console.log("plugin: ", pluginName);
+      console.log("plugin: ", pluginName, "cc?", !!cc);
     }
     break;
   case FLP_Text_EffectChanName:
@@ -567,7 +580,14 @@ states[STATE_EVENT] = function(parser) {
     // by parser.project.versionSpecificFactor
     break;
   case FLP_Text_TS404Params:
-    if (cc && cc.pluginSettings == null) {
+    if (parser.debug) {
+      console.log("FLP_Text_TS404Params");
+    }
+    if (cc) {
+      if (cc.pluginSettings != null && parser.debug) {
+        console.log("overwriting pluginSettings. we must have missed something: " +
+            fruityWrapper(cc.pluginSettings) + " -> " + fruityWrapper(strbuf));
+      }
       cc.pluginSettings = strbuf;
       cc.generatorName = "TS 404";
     }
@@ -579,7 +599,14 @@ states[STATE_EVENT] = function(parser) {
     }
     break;
   case FLP_Text_PluginParams:
-    if (cc && cc.pluginSettings == null) {
+    if (parser.debug) {
+      console.log("FLP_Text_PluginParams");
+    }
+    if (cc) {
+      if (cc.pluginSettings != null && parser.debug) {
+        console.log("overwriting pluginSettings. we must have missed something: " +
+            fruityWrapper(cc.pluginSettings) + " -> " + fruityWrapper(strbuf));
+      }
       cc.pluginSettings = strbuf;
     }
     break;
@@ -815,6 +842,8 @@ function FlpParser(options) {
   this.ppq = null;
   this.error = null;
 
+  this.gotCurChannel = false;
+
   setupListeners(this);
 }
 
@@ -866,18 +895,21 @@ function fruityWrapper(buf) {
   if (version == null) return "";
   if (version <= 4) {
     // "old format"
-    var extraBlockSize = readInt32LE();
-    var midiPort = readInt32LE();
-    var synthSaved = readInt32LE();
-    var pluginType = readInt32LE();
-    var pluginSpecificBlockSize = readInt32LE();
+    var extraBlockSize = readUInt32LE();
+    var midiPort = readUInt32LE();
+    var synthSaved = readUInt32LE();
+    var pluginType = readUInt32LE();
+    var pluginSpecificBlockSize = readUInt32LE();
     var pluginNameLen = readUInt8();
     if (pluginNameLen == null) return "";
-    return buf.slice(cursor, cursor + pluginNameLen).toString('utf8');
+    var pluginName = buf.slice(cursor, cursor + pluginNameLen).toString('utf8');
+    // heuristics to not include bad names
+    if (pluginName.indexOf("\u0000") >= 0) return "";
+    return pluginName;
   } else {
     // "new format"
     while (cursor < cursorEnd) {
-      var chunkId = readInt32LE();
+      var chunkId = readUInt32LE();
       var chunkSize = readUInt64LE();
       if (chunkSize == null) return "";
       if (chunkId === cidPluginName) {
@@ -887,6 +919,14 @@ function fruityWrapper(buf) {
     }
   }
   return "";
+
+  function readUInt32LE() {
+    if (cursor + 4 > buf.length) return null;
+
+    var val = buf.readUInt32LE(cursor);
+    cursor += 4;
+    return val;
+  }
 
   function readInt32LE() {
     if (cursor + 4 > buf.length) return null;
