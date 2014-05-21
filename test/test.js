@@ -75,6 +75,11 @@ var tests = [
     tempo: 140,
     plugins: ['Decimort', 'Altiverb 6', 'FabFilter Timeless 2', 'FabFilter Pro-L'],
   },
+  {
+    filename: 'nucleon-orbit.flp',
+    tempo: 132,
+    plugins: ['Harmless', 'Sytrus', 'Slicex', 'Maximus'],
+  },
 ];
 
 describe("in process", function() {

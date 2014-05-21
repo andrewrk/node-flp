@@ -86,6 +86,7 @@ var FLP_Reverb = FLP_Int + 11;
 var FLP_IntStretch = FLP_Int + 12;
 var FLP_SSNote = FLP_Int + 13;
 var FLP_FineTune = FLP_Int + 14;
+var FLP_FineTempo = 156;
 
 // TEXT EVENTS
 var FLP_Undef = 192; //+Size (var length)
@@ -390,6 +391,9 @@ states[STATE_EVENT] = function(parser) {
     parser.project.maxPatterns = Math.max(parser.project.currentPattern, parser.project.maxPatterns);
     break;
   case FLP_Tempo:
+    if (parser.debug) {
+      console.log("got tempo:", data);
+    }
     parser.project.tempo = data;
     break;
   case FLP_CurrentPatNum:
@@ -506,6 +510,12 @@ states[STATE_EVENT] = function(parser) {
     if (parser.debug) {
       console.log("int stretch (sample): ", data );
     }
+    break;
+  case FLP_FineTempo:
+    if (parser.debug) {
+      console.log("got fine tempo", data );
+    }
+    parser.project.tempo = data / 1000;
     break;
 
 
