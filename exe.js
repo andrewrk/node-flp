@@ -12,6 +12,10 @@ process.on('message', function(message) {
   });
 
   parser.on('end', function() {
+    // delete problematic properties
+    parser.project.channels.forEach(function(channel) {
+      delete channel.pluginSettings;
+    });
     process.send({
       type: 'end',
       value: parser.project,
