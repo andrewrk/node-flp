@@ -1,6 +1,6 @@
 {
   "name": "flp",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "parse and read fl studio project files",
   "main": "index.js",
   "scripts": {
