@@ -816,6 +816,7 @@ function createParserChild(options) {
   var child = spawn(process.execPath, [EXE_PATH], {
     stdio: ['pipe', process.stdout, process.stderr, 'ipc'],
   });
+  var gotEnd = false;
 
   var parserObject = new Writable(options);
   parserObject._write = function(chunk, encoding, callback) {
@@ -827,9 +828,28 @@ function createParserChild(options) {
 
   child.on('message', function(message) {
     if (message.type === 'error') {
+      gotEnd = true;
       parserObject.emit('error', new Error(message.value));
     } else {
+      if (message.type === 'end') {
+        if (gotEnd) return;
+        gotEnd = true;
+      }
       parserObject.emit(message.type, message.value);
+    }
+  });
+
+  child.on('error', function(err) {
+    if (!gotEnd) {
+      gotEnd = true;
+      parserObject.emit('error', err);
+    }
+  });
+
+  child.on('close', function(code) {
+    if (!gotEnd) {
+      gotEnd = true;
+      parserObject.emit('error', new Error("flp parser child process exited unexpectedly"));
     }
   });
 
