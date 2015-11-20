@@ -618,6 +618,19 @@ states[STATE_EVENT] = function(parser) {
             fruityWrapper(cc.pluginSettings) + " -> " + fruityWrapper(strbuf));
       }
       cc.pluginSettings = strbuf;
+      if (cc.pluginSettings.length >= 170) {
+        var vstPluginNumber = cc.pluginSettings.readUInt32LE(165);
+        var vstPluginId = vstPluginNumber
+          .toString(16)
+          .match(/.{1,2}/g)
+          .map(function(hex) { return String.fromCharCode(parseInt(hex,16)) })
+          .filter(function(c) { return c >= ' ' && c <= '}' })
+          .join('');
+        if (vstPluginId.length === 4) {
+          cc.vstPluginNumber = vstPluginNumber;
+          cc.vstPluginId = vstPluginId;
+        }
+      }
     }
     break;
   case FLP_Text_ChanParams:
