@@ -638,7 +638,7 @@ states[STATE_EVENT] = function(parser) {
       var flpPluginOffset  = 0;
       var flpPluginVersion = strbuf.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
       // NB: don't support the limited info found in flpPluginVersion <= 4.
-      if (flpPluginVersion >= 5 && flpPluginVersion <= 16) {
+      if (flpPluginVersion >= 5 && flpPluginVersion < 10) {
         while (flpPluginOffset < strbuf.length) {
           var flpPluginChunkId     = strbuf.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
           var flpPluginChunkSizeLo = strbuf.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
