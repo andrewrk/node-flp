@@ -637,7 +637,7 @@ states[STATE_EVENT] = function(parser) {
       cc.plugin = {}
       var flpPluginOffset  = 0;
       var flpPluginVersion = strbuf.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
-      // TODO support old <= 4 version too
+      // NB: don't support the limited info found in flpPluginVersion <= 4.
       if (flpPluginVersion >= 5 && flpPluginVersion <= 16) {
         while (flpPluginOffset < strbuf.length) {
           var flpPluginChunkId     = strbuf.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
