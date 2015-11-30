@@ -634,38 +634,39 @@ states[STATE_EVENT] = function(parser) {
             fruityWrapper(cc.pluginSettings) + " -> " + fruityWrapper(strbuf));
       }
       cc.pluginSettings = strbuf;
+      cc.plugin = {}
       var flpPluginOffset  = 0;
-      var flpPluginVersion = cc.pluginSettings.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
+      var flpPluginVersion = strbuf.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
       // TODO support old <= 4 version too
       if (flpPluginVersion >= 5 && flpPluginVersion <= 16) {
-        while (flpPluginOffset < cc.pluginSettings.length) {
-          var flpPluginChunkId     = cc.pluginSettings.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
-          var flpPluginChunkSizeLo = cc.pluginSettings.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
-          var flpPluginChunkSizeHi = cc.pluginSettings.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
+        while (flpPluginOffset < strbuf.length) {
+          var flpPluginChunkId     = strbuf.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
+          var flpPluginChunkSizeLo = strbuf.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
+          var flpPluginChunkSizeHi = strbuf.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
           var flpPluginChunkSize   = flpPluginChunkSizeLo + flpPluginChunkSizeHi * Math.pow(2,32);
           var flpPluginChunkOffset = flpPluginOffset;
           var flpPluginChunkEnd    = flpPluginOffset + flpPluginChunkSize;
           switch (flpPluginChunkId) {
             case PluginChunkIds.MIDI:
-              cc.pluginMidiInPort     = cc.pluginSettings.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
-              cc.pluginMidiOutPort    = cc.pluginSettings.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
-              cc.pluginPitchBendRange = cc.pluginSettings.readUInt8(flpPluginChunkOffset);    flpPluginChunkOffset += 1;
-              flpPluginChunkOffset   += 11; // Ignore reserved bytes.
+              cc.plugin.midiInPort     = strbuf.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
+              cc.plugin.midiOutPort    = strbuf.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
+              cc.plugin.pitchBendRange = strbuf.readUInt8(flpPluginChunkOffset);    flpPluginChunkOffset += 1;
+              flpPluginChunkOffset    += 11; // Ignore reserved bytes.
               break;
             case PluginChunkIds.Flags:
-              cc.pluginFlags = cc.pluginSettings.readUInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
+              cc.plugin.flags = strbuf.readUInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
               break;
             case PluginChunkIds.IO:
-              cc.pluginNumInputs   = cc.pluginSettings.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
-              cc.pluginNumOutputs  = cc.pluginSettings.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
+              cc.plugin.numInputs  = strbuf.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
+              cc.plugin.numOutputs = strbuf.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
               flpPluginChunkOffset += 8; // Ignore reserved bytes.
               break;
             case PluginChunkIds.InputInfo:
             case PluginChunkIds.OutputInfo:
               var pluginIOInfo = [];
               while (flpPluginChunkOffset < flpPluginChunkEnd) {
-                var pluginIOMixerOffset       = cc.pluginSettings.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
-                var pluginIOFlags             = cc.pluginSettings.readUInt8(flpPluginChunkOffset);    flpPluginChunkOffset += 1;
+                var pluginIOMixerOffset       = strbuf.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
+                var pluginIOFlags             = strbuf.readUInt8(flpPluginChunkOffset);    flpPluginChunkOffset += 1;
                 flpPluginChunkOffset         += 7; // Ignore reserved bytes.
                 pluginIOInfo.push({
                   MixerOffset : pluginIOMixerOffset,
@@ -673,41 +674,40 @@ states[STATE_EVENT] = function(parser) {
                 });
               }
               if (flpPluginChunkId === PluginChunkIds.InputInfo) {
-                cc.pluginInputInfo  = pluginIOInfo;
+                cc.plugin.inputInfo  = pluginIOInfo;
               }
               else {
-                cc.pluginOutputInfo = pluginIOInfo;
+                cc.plugin.outputInfo = pluginIOInfo;
               }
               break;
             case PluginChunkIds.PluginInfo:
-              cc.pluginInfoKind = cc.pluginSettings.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
+              cc.plugin.infoKind = strbuf.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
               flpPluginChunkOffset += 12; // Ignore reserved bytes.
               break;
             case PluginChunkIds.VSTPlugin:
-              var vstPluginNumber = cc.pluginSettings.readUInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
+              var vstPluginNumber = strbuf.readUInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
               var vstPluginId = vstPluginNumber
                 .toString(16)
                 .match(/.{1,2}/g)
                 .map(function(hex) { return String.fromCharCode(parseInt(hex,16)) })
                 .join('');
-              cc.vstPluginNumber = vstPluginNumber;
-              cc.vstPluginId = vstPluginId;
+              cc.plugin.vstNumber = vstPluginNumber;
+              cc.plugin.vstId = vstPluginId;
               break;
             case PluginChunkIds.GUID:
-              cc.pluginGUID = cc.pluginSettings.slice(flpPluginChunkOffset, flpPluginChunkEnd);
+              cc.plugin.GUID = strbuf.slice(flpPluginChunkOffset, flpPluginChunkEnd);
               break;
             case PluginChunkIds.State:
-              cc.pluginState = cc.pluginSettings.slice(flpPluginChunkOffset, flpPluginChunkEnd);
+              cc.plugin.state = strbuf.slice(flpPluginChunkOffset, flpPluginChunkEnd);
               break;
             case PluginChunkIds.Name:
-              cc.pluginName = cc.pluginSettings.toString('utf8', flpPluginChunkOffset, flpPluginChunkEnd);
-              console.warn('plugin chunk',cc.pluginName);
+              cc.plugin.name = strbuf.toString('utf8', flpPluginChunkOffset, flpPluginChunkEnd);
               break;
             case PluginChunkIds.Filename:
-              cc.pluginFilename = cc.pluginSettings.toString('utf8', flpPluginChunkOffset, flpPluginChunkEnd);
+              cc.plugin.filename = strbuf.toString('utf8', flpPluginChunkOffset, flpPluginChunkEnd);
               break;
             case PluginChunkIds.VendorName:
-              cc.pluginVendorName = cc.pluginSettings.toString('utf8', flpPluginChunkOffset, flpPluginChunkEnd);
+              cc.plugin.vendorName = strbuf.toString('utf8', flpPluginChunkOffset, flpPluginChunkEnd);
               break;
             default:
               break;
