@@ -664,10 +664,10 @@ states[STATE_EVENT] = function(parser) {
             case PluginChunkIds.InputInfo:
             case PluginChunkIds.OutputInfo:
               var pluginIOInfo = [];
-              while (flpPluginChunkOffset < flpPluginChunkEnd) {
-                var pluginIOMixerOffset       = strbuf.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
-                var pluginIOFlags             = strbuf.readUInt8(flpPluginChunkOffset);    flpPluginChunkOffset += 1;
-                flpPluginChunkOffset         += 7; // Ignore reserved bytes.
+              while (flpPluginChunkOffset + 12 <= flpPluginChunkEnd) {
+                var pluginIOMixerOffset = strbuf.readInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
+                var pluginIOFlags       = strbuf.readUInt8(flpPluginChunkOffset);    flpPluginChunkOffset += 1;
+                flpPluginChunkOffset   += 7; // Ignore reserved bytes.
                 pluginIOInfo.push({
                   MixerOffset : pluginIOMixerOffset,
                   Flags       : pluginIOFlags,
