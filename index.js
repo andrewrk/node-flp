@@ -158,6 +158,22 @@ var EnvelopeTargets = {
   NumTargets: 3,
 };
 
+var PluginChunkIds = {
+  MIDI: 1,
+  Flags: 2,
+  IO: 30,
+  InputInfo: 31,
+  OutputInfo: 32,
+  PluginInfo: 50,
+  VSTPlugin: 51,
+  GUID: 52,
+  State: 53,
+  Name: 54,
+  Filename: 55,
+  VendorName: 56,
+};
+
+
 var STATE_COUNT   = 0;
 var STATE_START   = STATE_COUNT++;
 var STATE_HEADER  = STATE_COUNT++;
@@ -618,17 +634,42 @@ states[STATE_EVENT] = function(parser) {
             fruityWrapper(cc.pluginSettings) + " -> " + fruityWrapper(strbuf));
       }
       cc.pluginSettings = strbuf;
-      if (cc.pluginSettings.length >= 170) {
-        var vstPluginNumber = cc.pluginSettings.readUInt32LE(165);
-        var vstPluginId = vstPluginNumber
-          .toString(16)
-          .match(/.{1,2}/g)
-          .map(function(hex) { return String.fromCharCode(parseInt(hex,16)) })
-          .filter(function(c) { return c >= ' ' && c <= '}' })
-          .join('');
-        if (vstPluginId.length === 4) {
-          cc.vstPluginNumber = vstPluginNumber;
-          cc.vstPluginId = vstPluginId;
+      var flpPluginOffset  = 0;
+      var flpPluginVersion = cc.pluginSettings.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
+      if (flpPluginVersion >= 5) {
+        while (flpPluginOffset < cc.pluginSettings.length) {
+          var flpPluginChunkId     = cc.pluginSettings.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
+          var flpPluginChunkSizeLo = cc.pluginSettings.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
+          var flpPluginChunkSizeHi = cc.pluginSettings.readUInt32LE(flpPluginOffset);  flpPluginOffset += 4;
+          var flpPluginChunkSize   = flpPluginChunkSizeLo + flpPluginChunkSizeHi * Math.pow(2,32);
+          var flpPluginChunkOffset = flpPluginOffset;
+          switch (flpPluginChunkId) {
+            case PluginChunkIds.MIDI:
+            case PluginChunkIds.Flags:
+            case PluginChunkIds.IO:
+            case PluginChunkIds.InputInfo:
+            case PluginChunkIds.OutputInfo:
+            case PluginChunkIds.PluginInfo:
+              break;
+            case PluginChunkIds.VSTPlugin:
+              var vstPluginNumber = cc.pluginSettings.readUInt32LE(flpPluginChunkOffset);  flpPluginChunkOffset += 4;
+              var vstPluginId = vstPluginNumber
+                .toString(16)
+                .match(/.{1,2}/g)
+                .map(function(hex) { return String.fromCharCode(parseInt(hex,16)) })
+                .join('');
+              cc.vstPluginNumber = vstPluginNumber;
+              cc.vstPluginId = vstPluginId;
+              break;
+            case PluginChunkIds.GUID:
+            case PluginChunkIds.State:
+            case PluginChunkIds.Name:
+            case PluginChunkIds.Filename:
+            case PluginChunkIds.VendorName:
+            default:
+              break;
+          }
+          flpPluginOffset += flpPluginChunkSize;
         }
       }
     }
